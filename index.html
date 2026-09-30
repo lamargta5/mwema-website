@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="icon.png" type="image/x-icon">
+    <title>Mwema</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000000;
+            overflow: hidden;
+            color: #ffffff;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Loading Screen Container - Pitch Black */
+        #loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.6s ease;
+            cursor: pointer;
+        }
+
+        /* Square Logo Scaled to ~50% of screen space */
+        .logo-wrapper {
+            position: relative;
+            width: 50vw;
+            height: 50vw;
+            max-width: 360px;
+            max-height: 360px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .logo {
+            width: 75%;
+            height: 75%;
+            object-fit: contain;
+            position: relative;
+            z-index: 2;
+            filter: drop-shadow(0 0 25px rgba(59, 130, 246, 0.3));
+        }
+
+        /* Next-Level Glowing Cyber Ring Animation */
+        .cyber-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: #3b82f6;
+            border-bottom-color: #8b5cf6;
+            animation: spinRing 2s linear infinite;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(139, 92, 246, 0.2);
+            pointer-events: none;
+        }
+
+        .cyber-ring-outer {
+            position: absolute;
+            width: 112%;
+            height: 112%;
+            border-radius: 50%;
+            border: 1px dashed rgba(59, 130, 246, 0.4);
+            animation: spinRingReverse 6s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes spinRing {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spinRingReverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        /* Next-Level Progress Bar & Counter Container */
+        .progress-container {
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-info {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .loading-text {
+            color: #94a3b8;
+        }
+
+        .loading-counter {
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .progress-bar-track {
+            width: 100%;
+            height: 4px;
+            background-color: #0f172a;
+            border-radius: 2px;
+            overflow: hidden;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.8);
+        }
+
+        .progress-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+            box-shadow: 0 0 10px #3b82f6;
+            border-radius: 2px;
+            transition: width 0.1s linear;
+        }
+
+        /* Fullscreen instructions */
+        .fullscreen-hint {
+            margin-top: 18px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.75rem;
+            color: #64748b;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            animation: pulseHint 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseHint {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Fullscreen Content Container */
+        #content-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            z-index: 1000;
+        }
+
+        #content-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .fullscreen-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+        }
+
+        .fullscreen-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Invisible shield overlay to completely block direct mouse interactions/right-clicks on the iframe */
+        #iframe-shield {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1005;
+            display: none; /* Can be enabled if you want to block all direct mouse control inside the iframe */
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <!-- Loading Section -->
+    <div id="loader-container">
+        <div class="logo-wrapper">
+            <div class="cyber-ring-outer"></div>
+            <div class="cyber-ring"></div>
+            <img src="logo.png" alt="Logo" class="logo">
+        </div>
+        <div class="progress-container">
+            <div class="progress-info">
+                <span class="loading-text">Initializing...</span>
+                <span id="loading-counter" class="loading-counter">0%</span>
+            </div>
+            <div class="progress-bar-track">
+                <div id="progress-bar-fill" class="progress-bar-fill"></div>
+            </div>
+        </div>
+        <div class="fullscreen-hint">Click anywhere or Press F11 to exit full screen</div>
+    </div>
+
+    <!-- Fullscreen Content Window -->
+    <div id="content-modal">
+        <div class="fullscreen-container">
+            <!-- Target destination URL frame -->
+            <iframe id="external-frame" src="" data-src="https://lamargta5.github.io/mwema-endpoint/linux6.html" title="External Content"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Comprehensive Multi-Layer Protection Against Context Menu & DevTools
+        const blockEvent = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        };
+
+        // 1. Disable Right-Click Globally
+        document.addEventListener('contextmenu', blockEvent, true);
+
+        // 2. Disable F12, Ctrl+Shift+I/J/C, Ctrl+U, and other inspect shortcuts
+        document.addEventListener('keydown', event => {
+            if (
+                event.key === 'F12' || 
+                event.keyCode === 123 ||
+                (event.ctrlKey && event.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(event.key)) ||
+                (event.ctrlKey && ['U', 'u', 'S', 's', 'H', 'h'].includes(event.key))
+            ) {
+                blockEvent(event);
+            }
+        }, true);
+
+        // 3. Continuous Anti-Debugger / Console Check
+        setInterval(() => {
+            const before = new Date().getTime();
+            debugger; // Triggers debugger pause if DevTools is open
+            const after = new Date().getTime();
+            if (after - before > 100) {
+                // Optional: Action to take if DevTools is detected (e.g., clear body)
+                document.body.innerHTML = "<h2 style='color:white;text-align:center;margin-top:20vh;'>Access Denied</h2>";
+            }
+        }, 1000);
+
+        // App Transition & Dynamic 6-Second Loader Counter Logic
+        window.addEventListener('DOMContentLoaded', () => {
+            const loaderContainer = document.getElementById('loader-container');
+            const contentModal = document.getElementById('content-modal');
+            const externalFrame = document.getElementById('external-frame');
+            const progressBarFill = document.getElementById('progress-bar-fill');
+            const loadingCounter = document.getElementById('loading-counter');
+
+            const triggerFullScreen = () => {
+                const elem = document.documentElement;
+                if (!document.fullscreenElement) {
+                    if (elem.requestFullscreen) {
+                        elem.requestFullscreen().catch(() => {});
+                    } else if (elem.webkitRequestFullscreen) {
+                        elem.webkitRequestFullscreen();
+                    } else if (elem.msRequestFullscreen) {
+                        elem.msRequestFullscreen();
+                    }
+                }
+            };
+
+            triggerFullScreen();
+            document.addEventListener('click', triggerFullScreen, { once: true });
+
+            const loadingTime = 6000;
+            const intervalTime = 30; 
+            let elapsedTime = 0;
+
+            const progressInterval = setInterval(() => {
+                elapsedTime += intervalTime;
+                let percentage = Math.min(Math.floor((elapsedTime / loadingTime) * 100), 100);
+
+                progressBarFill.style.width = percentage + '%';
+                loadingCounter.textContent = percentage + '%';
+
+                if (elapsedTime >= loadingTime) {
+                    clearInterval(progressInterval);
+                }
+            }, intervalTime);
+
+            setTimeout(() => {
+                loaderContainer.style.opacity = '0';
+                
+                setTimeout(() => {
+                    loaderContainer.style.display = 'none';
+                    externalFrame.src = externalFrame.getAttribute('data-src');
+                    contentModal.classList.add('active');
+                }, 600);
+
+            }, loadingTime);
+        });
+    </script>
+</body>
+</html>
